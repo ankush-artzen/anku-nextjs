@@ -38,14 +38,15 @@ export async function POST(req) {
         password: hashedPassword,
       },
     });
-
+console.log("userrr",user)
     // ✅ Create JWT token
-    const token = createToken(user.id);
+    const token = createToken(user);
 
     // ✅ Set token as cookie
     const cookieStore = cookies();
-    cookieStore.set("token", token, {
-      httpOnly: true,
+    cookieStore.set({
+      name: "token",
+      value: token,
       maxAge: 7 * 24 * 60 * 60, // 7 days
       path: "/",
       sameSite: "lax",

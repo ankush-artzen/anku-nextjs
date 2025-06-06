@@ -22,6 +22,7 @@ export async function GET(req) {
       return NextResponse.json({ message: 'Unauthorized: Invalid token' }, { status: 401 });
     }
 
+    console.log("payloadddd",payload)
     const userId = payload.id;
 
     // 3. Pagination params
