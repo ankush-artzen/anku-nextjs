@@ -1,24 +1,15 @@
-import { Redis } from '@upstash/redis';
 
-console.log('Upstash URL:', process.env.UPSTASH_REDIS_REST_URL);
-console.log('Upstash Token:', process.env.UPSTASH_REDIS_REST_TOKEN ? '***' : 'Not found')
+import Redis from "ioredis";
 
-export const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN,
-});
+let redis;
 
-// import Redis from "ioredis";
+if (!global.redis) {
+  global.redis = new Redis({
+    host: "127.0.0.1",
+    port: 6379,
+  }); 
+}
 
-// let redis;
+redis = global.redis;
 
-// if (!global.redis) {
-//   global.redis = new Redis({
-//     host: "127.0.0.1", // or 'localhost'
-//     port: 6379,
-//   }); // default: localhost:6379
-// }
-
-// redis = global.redis;
-
-// export { redis };
+export { redis };

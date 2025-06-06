@@ -35,7 +35,7 @@ export default function DeleteConfirm({ open, onConfirm, onCancel, onOpenChange 
                 className="bg-red-600 text-black hover:bg-red-700"
                 onClick={onConfirm}
               >
-                Logout
+                Delete
               </Button>
             </AlertDialog.Action>
           </div>

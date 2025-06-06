@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import React, { useEffect } from 'react';
-import ReactPaginate from 'react-paginate';
-import Link from 'next/link';
-import usePaginatedBlogsContainer from '@/lib/hooks/PaginatedBlogsContainer';
-import { useDispatch } from 'react-redux';
-import { clearAllBlogs } from '@/redux/slices/blogSlice';
+import React, { useEffect } from "react";
+import ReactPaginate from "react-paginate";
+import Link from "next/link";
+import usePaginatedBlogsContainer from "@/lib/hooks/PaginatedBlogsContainer";
+import { useDispatch } from "react-redux";
+import { clearAllBlogs } from "@/redux/slices/blogSlice";
 
 export default function MyBlogsPage() {
   const { blogs, user, page, totalPages, loading, error, setPage } =
     usePaginatedBlogsContainer();
-    const dispatch = useDispatch();
+  const dispatch = useDispatch();
 
-    useEffect(() => {
-      dispatch(clearAllBlogs()); 
-    }, [dispatch]);
+  useEffect(() => {
+    dispatch(clearAllBlogs());
+  }, [dispatch]);
   const handlePageClick = ({ selected }) => {
     setPage(selected + 1);
   };
@@ -31,7 +31,7 @@ export default function MyBlogsPage() {
         </p>
       )}
 
-      {blogs.length === 0 ? (
+      {!loading && blogs.length === 0 ? (
         <p className="text-gray-600">You haven't created any blogs yet.</p>
       ) : (
         <>

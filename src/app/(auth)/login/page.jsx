@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { setCookie } from "cookies-next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 
@@ -37,7 +38,10 @@ export default function LoginPage() {
       const result = await res.json();
 
       if (!res.ok) throw new Error(result.message || "Login failed");
-
+      setCookie("user", JSON.stringify(result.user), {
+        path: "/",
+        maxAge: 7 * 24 * 60 * 60, // 7 days
+      });
       toast.success("Login successful!");
       router.push("/"); // Redirect after successful login
     } catch (err) {

@@ -3,8 +3,17 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { getCookie, deleteCookie } from "cookies-next";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 import LogoutConfirmDialog from "@/components/ui/LogoutConfirmDialog";
+
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -12,24 +21,38 @@ export default function Navbar() {
   const [confirmOpen, setConfirmOpen] = useState(false); // Dialog open state
 
   const router = useRouter();
+  const [userEmail, setUserEmail] = useState("");
+
 
   // Check for token on client side
   useEffect(() => {
-    if (typeof document !== "undefined") {
-      const token = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("token="));
-
-      setIsLoggedIn(!!token);
+    const token = getCookie("token");
+    const user = getCookie("user");
+  
+    console.log("TOKEN:", token);
+    console.log("USER RAW:", user);
+  
+    setIsLoggedIn(!!token);
+  
+    if (user) {
+      try {
+        const decoded = decodeURIComponent(user);
+        const parsed = JSON.parse(decoded);
+        console.log("USER PARSED:", parsed);
+        setUserEmail(parsed.email || "");
+      } catch (err) {
+        console.error("Failed to parse user cookie", err);
+        setUserEmail("");
+      }
     }
   }, []);
-
+  
+  
   const handleLogout = () => {
-    document.cookie = "token=; Max-Age=0; path=/";
+    deleteCookie("token");
     setIsLoggedIn(false);
     setConfirmOpen(false);
-    router.push("/");
-    window.location.reload();
+    router.push('/login');
   };
 
   return (
@@ -59,14 +82,30 @@ export default function Navbar() {
               >
                 Dashboard
               </Link>
-
               {isLoggedIn ? (
-                <button
-                  onClick={() => setConfirmOpen(true)} // Open confirmation dialog instead of direct logout
-                  className="text-gray-700 dark:text-gray-300 hover:text-red-500"
-                >
-                  Logout
-                </button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="focus:outline-none">
+                      <Avatar className="w-9 h-9">
+                        <AvatarImage
+                          src={`https://ui-avatars.com/api/?name=${encodeURIComponent(userEmail || "U")}`}
+                          alt="User Avatar"
+                        />
+                        <AvatarFallback>
+                          {(userEmail || "U")[0].toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <div className="px-4 py-2 text-sm text-muted-foreground">
+                      {userEmail}
+                    </div>
+                    <DropdownMenuItem onClick={() => setConfirmOpen(true)}>
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               ) : (
                 <Link
                   href="/login"

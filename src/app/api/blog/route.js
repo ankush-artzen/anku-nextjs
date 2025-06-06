@@ -24,6 +24,14 @@ export async function GET(req) {
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
+        include: {
+          author: {
+            select: {
+              username: true,
+              email: true,
+            },
+          },
+        },
       }),
       prisma.blog.count(),
     ]);
