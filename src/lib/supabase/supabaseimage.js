@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/utils/supabaseClient';
+import { supabase } from '@/lib/supabase/supabaseClient';
 
 export async function uploadImage(file) {
   const fileBuffer = await file.arrayBuffer();

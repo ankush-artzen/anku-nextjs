@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { prisma } from "@/lib/prisma";
-import { supabase } from "@/lib/utils/supabaseClient";
+import { supabase } from "@/lib/supabase/supabaseClient";
 import { blogSchema } from "@/lib/validations/blogSchema";
 
 const JWT_SECRET = process.env.JWT_SECRET;
