@@ -21,7 +21,7 @@ export async function middleware(req) {
   const isAuthRoute = AUTH_ROUTES.includes(pathname);
 
   const token = req.cookies.get("token")?.value;
-
+  console.log("texttttt********************************token************************",token)
   // If it's an auth route and user has a valid token, redirect to dashboard
   if (isAuthRoute && token) {
     try {

@@ -37,8 +37,8 @@ export default function SignupPage() {
           email: data.email,
           password: data.password,
         }),
+        credentials: "include",
       });
-
       let result;
       try {
         result = await res.json();
@@ -48,14 +48,15 @@ export default function SignupPage() {
       }
 
       if (!res.ok) {
-   
         throw new Error(result.error || result.message || "Signup failed");
       }
-
+      console.log("resultt",result)
+      // document.cookie = `token=${result.token}; path=/; max-age=${
+      //   7 * 24 * 60 * 60
+      // }; secure; samesite=strict`;
       toast.success("Signup successful!..");
-      router.push("/");
+      // router.push("/");
     } catch (err) {
-      
       toast.error(err.message || "Signup error occurred");
     } finally {
       setLoading(false);
@@ -153,7 +154,7 @@ export default function SignupPage() {
               >
                 Login
               </Link>
-              </p>
+            </p>
           </form>
         </CardContent>
       </Card>
