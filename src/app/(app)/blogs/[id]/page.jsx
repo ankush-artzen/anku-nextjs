@@ -1,9 +1,10 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { toast } from 'react-toastify';
-import { jwtDecode } from 'jwt-decode';
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { toast } from "react-toastify";
+import { jwtDecode } from "jwt-decode";
+import DeleteConfirm from "@/components/ui/DeleteConfirm";
 
 export default function BlogDetailPage() {
   const { id } = useParams();
@@ -11,18 +12,22 @@ export default function BlogDetailPage() {
 
   const [blog, setBlog] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
     // Extract user ID from token
-    const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+    const token = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("token="))
+      ?.split("=")[1];
     if (token) {
       try {
         const decoded = jwtDecode(token);
         setCurrentUserId(decoded.id); // Assuming JWT payload includes "id"
       } catch (err) {
-        console.error('Invalid token:', err);
+        console.error("Invalid token:", err);
       }
     }
   }, []);
@@ -33,7 +38,7 @@ export default function BlogDetailPage() {
         const res = await fetch(`/api/blog/${id}`);
         if (!res.ok) {
           const data = await res.json();
-          throw new Error(data.message || 'Failed to fetch blog');
+          throw new Error(data.message || "Failed to fetch blog");
         }
         const data = await res.json();
         setBlog(data);
@@ -50,13 +55,13 @@ export default function BlogDetailPage() {
   }, [id]);
 
   const handleDelete = async () => {
-    const confirmDelete = window.confirm('Are you sure you want to delete this blog?');
-    if (!confirmDelete) return;
-
     try {
-      const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+      const token = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("token="))
+        ?.split("=")[1];
       const res = await fetch(`/api/blog/${id}`, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -65,11 +70,11 @@ export default function BlogDetailPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || 'Failed to delete blog');
+        throw new Error(data.message || "Failed to delete blog");
       }
 
-      toast.success('Blog deleted successfully');
-      router.push('/blogs/dashboard');
+      toast.success("Blog deleted successfully");
+      router.push("/blogs/dashboard");
     } catch (err) {
       toast.error(err.message);
     }
@@ -107,13 +112,19 @@ export default function BlogDetailPage() {
             Edit
           </button>
           <button
-            onClick={handleDelete}
+            onClick={() => setConfirmOpen(true)}
             className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
           >
             Delete
           </button>
         </div>
       )}
+      <DeleteConfirm
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </div>
   );
 }

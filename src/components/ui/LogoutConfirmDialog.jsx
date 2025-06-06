@@ -10,11 +10,11 @@ export default function DeleteConfirm({ open, onConfirm, onCancel, onOpenChange 
         <AlertDialog.Overlay className="fixed inset-0 bg-black/30" />
         <AlertDialog.Content className="fixed bg-white p-6 rounded-md shadow-xl top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%] w-[90%] max-w-md">
           <AlertDialog.Title className="text-lg font-semibold text-gray-800">
-            Wanna Delete?
+            Wanna Logout?
           </AlertDialog.Title>
 
           <AlertDialog.Description className="text-sm text-gray-600 mt-2 mb-4">
-            Are you sure you want to Delete this Blog?
+            Are you sure you want to Logout?
           </AlertDialog.Description>
 
           <div className="flex justify-end gap-4">

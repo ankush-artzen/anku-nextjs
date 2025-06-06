@@ -55,7 +55,7 @@ export default function SignupPage() {
       //   7 * 24 * 60 * 60
       // }; secure; samesite=strict`;
       toast.success("Signup successful!..");
-      // router.push("/");
+      router.push("/");
     } catch (err) {
       toast.error(err.message || "Signup error occurred");
     } finally {

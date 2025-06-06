@@ -9,8 +9,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 // ✅ GET a single blog
 export async function GET(req, { params }) {
   try {
-    const { id } = params;
-
+    const { id } = await params  // ✅ this is correct
     const blog = await prisma.blog.findUnique({ where: { id } });
 
     if (!blog) {
@@ -20,18 +19,24 @@ export async function GET(req, { params }) {
     return NextResponse.json(blog, { status: 200 });
   } catch (error) {
     console.error('Get single blog error:', error);
-    return NextResponse.json({ message: 'Server error', details: error.message }, { status: 500 });
+    return NextResponse.json(
+      { message: 'Server error', details: error.message },
+      { status: 500 }
+    );
   }
 }
 
-export async function PATCH(req, { params }) {
+
+export async function PATCH(req, context) {
   try {
+    const { params } = await context;
+    const blogId = await params.id;
+
     const token = req.headers.get('authorization')?.split(' ')[1];
     if (!token) return NextResponse.json({ message: 'Unauthorized: No token' }, { status: 401 });
 
     const payload = jwt.verify(token, JWT_SECRET);
 
-    const blogId = params.id;
     const blog = await prisma.blog.findUnique({ where: { id: blogId } });
     if (!blog) return NextResponse.json({ message: 'Blog not found' }, { status: 404 });
     if (blog.authorId !== payload.id) {
@@ -79,21 +84,10 @@ export async function PATCH(req, { params }) {
   }
 }
 
-
-// ✅ DELETE: Delete blog
-
 export async function DELETE(req, context) {
-  // Try destructuring params, fallback to URL parsing if undefined
-  let id;
-  if (context?.params) {
-    id = context.params.id;
-  } else {
-    const url = new URL(req.url);
-    const pathname = url.pathname;
-    id = pathname.split('/').pop();
-  }
+  const { params } = await context;
+  const id = params?.id;
 
-  // Validate id
   if (!id) {
     return NextResponse.json({ message: 'Blog ID not provided' }, { status: 400 });
   }
