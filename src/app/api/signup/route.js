@@ -43,12 +43,13 @@ export async function POST(req) {
     const token = createToken(user);
 
     // ✅ Set token as cookie
-    const cookieStore = await cookies();
+    const cookieStore = cookies();
     cookieStore.set({
       name: "token",
       value: token,
       maxAge: 7 * 24 * 60 * 60, // 7 days
       path: "/",
+      httpOnly: true,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
     });
