@@ -1,4 +1,5 @@
 'use client';
+
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
@@ -18,31 +19,34 @@ export default function EditBlog() {
     content: '',
     image: null,
   });
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchBlog = async () => {
       try {
-        const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+        const token = document.cookie
+          .split('; ')
+          .find(row => row.startsWith('token='))
+          ?.split('=')[1];
+
         if (!token) {
-          toast.error('Please log in first');
+          setTimeout(() => toast.error('Please log in first'), 500);
           return router.push('/login');
         }
 
-        const response = await fetch(`/api/blog/${id}`, {
+        const res = await fetch(`/api/blog/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch blog');
-        }
+        if (!res.ok) throw new Error('Failed to fetch blog');
 
-        const data = await response.json();
+        const data = await res.json();
         setInitialValues({ title: data.title, content: data.content, image: null });
       } catch (err) {
-        toast.error(err.message || 'Failed to load blog');
+        setTimeout(() => toast.error(err.message || 'Failed to load blog'), 500);
         router.push('/login');
       } finally {
         setLoading(false);
@@ -53,33 +57,39 @@ export default function EditBlog() {
   }, [id, router]);
 
   const handleSubmit = async (values) => {
-    const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+    const token = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('token='))
+      ?.split('=')[1];
+
     if (!token) return toast.error('Please log in first');
 
     try {
-      const formDataToSend = new FormData();
-      formDataToSend.append('title', values.title);
-      formDataToSend.append('content', values.content);
+      const formData = new FormData();
+      formData.append('title', values.title);
+      formData.append('content', values.content);
       if (values.image) {
-        formDataToSend.append('image', values.image);
+        formData.append('image', values.image);
       }
 
-      const response = await fetch(`/api/blog/${id}`, {
+      const res = await fetch(`/api/blog/${id}`, {
         method: 'PATCH',
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        body: formDataToSend,
+        body: formData,
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to update blog');
-      }
+      if (!res.ok) throw new Error('Failed to update blog');
 
-      toast.success('Blog updated!');
-      setTimeout(() => router.push(`/blogs/${id}`), 1500);
+      setTimeout(() => {
+        toast.success('Blog updated!');
+        router.push(`/blogs/${id}`);
+      }, 500);
     } catch (err) {
-      toast.error(err.message || 'Update failed');
+      setTimeout(() => {
+        toast.error(err.message || 'Update failed');
+      }, 500);
     }
   };
 
@@ -107,21 +117,12 @@ export default function EditBlog() {
         {({ setFieldValue }) => (
           <Form className="space-y-4">
             <div>
-              <Field
-                as={Input}
-                name="title"
-                placeholder="Title"
-              />
+              <Field as={Input} name="title" placeholder="Title" />
               <ErrorMessage name="title" component="div" className="text-red-500 text-sm" />
             </div>
 
             <div>
-              <Field
-                as={Textarea}
-                name="content"
-                placeholder="Content"
-                rows={10}
-              />
+              <Field as={Textarea} name="content" placeholder="Content" rows={10} />
               <ErrorMessage name="content" component="div" className="text-red-500 text-sm" />
             </div>
 

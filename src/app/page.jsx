@@ -15,6 +15,7 @@ import ReactPaginate from "react-paginate";
 export default function HomePage() {
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showLoader, setShowLoader] = useState(true);  // new state
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(0); // 0-based for react-paginate
   const [totalPages, setTotalPages] = useState(0);
@@ -23,8 +24,9 @@ export default function HomePage() {
   const fetchBlogs = async (page = 0) => {
     setLoading(true);
     try {
-      // NO token needed for public blogs access
-      const res = await fetch(`/api/blog?page=${page + 1}&limit=${blogsPerPage}`);
+      const res = await fetch(
+        `/api/blog?page=${page + 1}&limit=${blogsPerPage}`
+      );
 
       if (!res.ok) throw new Error("Failed to fetch blogs");
 
@@ -46,9 +48,29 @@ export default function HomePage() {
     fetchBlogs(currentPage);
   }, [currentPage]);
 
+  // Show loader for at least 3 seconds on loading state changes
+  useEffect(() => {
+    if (loading) {
+      setShowLoader(true);
+    } else {
+      const timer = setTimeout(() => {
+        setShowLoader(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [loading]);
+
   const handlePageClick = ({ selected }) => {
     setCurrentPage(selected); // react-paginate is zero-based
   };
+
+  if (loading || showLoader) {
+    return (
+      <main className="max-w-5xl mx-auto p-8 space-y-16 flex justify-center items-center min-h-[400px]">
+        <div className="w-10 h-10 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
+      </main>
+    );
+  }
 
   return (
     <main className="max-w-5xl mx-auto p-8 space-y-16">
@@ -71,10 +93,9 @@ export default function HomePage() {
       <section>
         <h2 className="text-3xl font-semibold mb-8">Latest Blogs</h2>
 
-        {loading && <p className="text-center">Loading blogs...</p>}
         {error && <p className="text-center text-red-600">{error}</p>}
 
-        {!loading && !error && (
+        {!error && (
           <>
             {blogs.length === 0 ? (
               <p className="text-center text-muted-foreground">No blogs found.</p>
@@ -106,7 +127,6 @@ export default function HomePage() {
                     </Card>
                   </Link>
                 ))}
-
               </div>
             )}
 
@@ -120,12 +140,18 @@ export default function HomePage() {
                   pageCount={totalPages}
                   onPageChange={handlePageClick}
                   forcePage={currentPage}
-                  containerClassName={"flex gap-2"}
-                  pageClassName={"px-3 py-1 border rounded-md"}
-                  activeClassName={"bg-blue-600 text-white"}
-                  previousClassName={"px-3 py-1 border rounded-md"}
-                  nextClassName={"px-3 py-1 border rounded-md"}
-                  disabledClassName={"opacity-50 cursor-not-allowed"}
+                  containerClassName="flex gap-2 justify-center mt-8 flex-wrap"
+                  pageClassName="border rounded-md"
+                  pageLinkClassName="px-3 py-1 text-sm text-gray-700 hover:bg-blue-100 transform transition-transform duration-200 hover:scale-105 cursor-pointer"
+                  activeClassName="bg-blue-400 text-white"
+                  activeLinkClassName="text-white font-semibold"
+                  previousClassName="border rounded-md"
+                  previousLinkClassName="px-3 py-1 text-sm text-gray-700 hover:bg-blue-100 transform transition-transform duration-200 hover:scale-105 cursor-pointer"
+                  nextClassName="border rounded-md"
+                  nextLinkClassName="px-3 py-1 text-sm text-gray-700 hover:bg-blue-100 transform transition-transform duration-200 hover:scale-105 cursor-pointer"
+                  breakClassName="border rounded-md"
+                  breakLinkClassName="px-3 py-1 text-sm text-gray-500 cursor-default"
+                  disabledClassName="opacity-50 cursor-not-allowed"
                 />
               </div>
             )}

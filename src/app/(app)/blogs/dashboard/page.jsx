@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import ReactPaginate from "react-paginate";
 import Link from "next/link";
 import usePaginatedBlogsContainer from "@/lib/hooks/PaginatedBlogsContainer";
@@ -8,18 +8,42 @@ import { useDispatch } from "react-redux";
 import { clearAllBlogs } from "@/redux/slices/blogSlice";
 
 export default function MyBlogsPage() {
-  const { blogs, user, page, totalPages, loading, error, setPage } =
+  const { blogs, user, page, totalPages, loading: loadingFromHook, error, setPage } =
     usePaginatedBlogsContainer();
   const dispatch = useDispatch();
+
+  const [showLoader, setShowLoader] = useState(true);
 
   useEffect(() => {
     dispatch(clearAllBlogs());
   }, [dispatch]);
+
+  useEffect(() => {
+  
+    if (loadingFromHook) {
+      setShowLoader(true);
+    } else {
+      // Data loaded, wait at least 3 seconds before hiding loader
+      const timer = setTimeout(() => {
+        setShowLoader(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [loadingFromHook]);
+
   const handlePageClick = ({ selected }) => {
     setPage(selected + 1);
   };
 
-  if (loading) return <p className="text-center py-4">Loading your blogs...</p>;
+  // Show loader if either hook is loading or we haven't reached 3 seconds yet
+  if (loadingFromHook || showLoader) {
+    return (
+      <div className="flex justify-center items-center py-10">
+        <div className="w-10 h-10 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
   if (error) return <p className="text-center text-red-500 py-4">{error}</p>;
 
   return (
@@ -31,7 +55,7 @@ export default function MyBlogsPage() {
         </p>
       )}
 
-      {!loading && blogs.length === 0 ? (
+      {!loadingFromHook && blogs.length === 0 ? (
         <p className="text-gray-600">You haven't created any blogs yet.</p>
       ) : (
         <>
@@ -56,7 +80,6 @@ export default function MyBlogsPage() {
               </Link>
             ))}
           </div>
-
           <ReactPaginate
             previousLabel="Prev"
             nextLabel="Next"
