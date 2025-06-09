@@ -13,7 +13,7 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 import LogoutConfirmDialog from "@/components/ui/LogoutConfirmDialog";
-
+import { logout } from "@/redux/slices/authSlice";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -23,17 +23,16 @@ export default function Navbar() {
   const router = useRouter();
   const [userEmail, setUserEmail] = useState("");
 
-
   // Check for token on client side
   useEffect(() => {
     const token = getCookie("token");
     const user = getCookie("user");
-  
+
     console.log("TOKEN:", token);
     console.log("USER RAW:", user);
-  
+
     setIsLoggedIn(!!token);
-  
+
     if (user) {
       try {
         const decoded = decodeURIComponent(user);
@@ -46,13 +45,14 @@ export default function Navbar() {
       }
     }
   }, []);
-  
-  
+
   const handleLogout = () => {
     deleteCookie("token");
+    deleteCookie("user");
     setIsLoggedIn(false);
     setConfirmOpen(false);
-    router.push('/login');
+    logout();
+    router.push("/login");
   };
 
   return (
@@ -71,17 +71,12 @@ export default function Navbar() {
             {/* Desktop Menu */}
             <div className="hidden md:flex space-x-6">
               <Link
-                href="/"
-                className="text-gray-700 dark:text-gray-300 hover:text-blue-600"
-              >
-                Home
-              </Link>
-              <Link
                 href="/blogs/dashboard"
-                className="text-gray-700 dark:text-gray-300 hover:text-blue-600"
+                className="mt-2 font-bold text-blue-600 hover:text-blue-700"
               >
                 Dashboard
               </Link>
+
               {isLoggedIn ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -108,11 +103,11 @@ export default function Navbar() {
                 </DropdownMenu>
               ) : (
                 <Link
-                  href="/login"
-                  className="text-gray-700 dark:text-gray-300 hover:text-blue-600"
-                >
-                  Login
-                </Link>
+                href="/blogs/dashboard"
+                className="mt-2 font-bold text-blue-600 hover:text-blue-700"
+              >
+                Login
+              </Link>
               )}
             </div>
 

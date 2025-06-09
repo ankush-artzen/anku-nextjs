@@ -1,6 +1,7 @@
 "use client";
 
 import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
@@ -9,24 +10,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
+import { signupSchema } from "@/app/(app)/blogs/validations/authSchema";
+import { setCookie } from "cookies-next";
 
 export default function SignupPage() {
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm();
+  } = useForm({
+    resolver: yupResolver(signupSchema),
+  });
+
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   async function onSubmit(data) {
     setLoading(true);
-
-    if (data.password !== data.confirmPassword) {
-      toast.error("Passwords do not match");
-      setLoading(false);
-      return;
-    }
 
     try {
       const res = await fetch("/api/signup", {
@@ -39,22 +39,16 @@ export default function SignupPage() {
         }),
         credentials: "include",
       });
-      let result;
-      try {
-        result = await res.json();
-      } catch {
-        // If response is not JSON
-        throw new Error("Unexpected server response");
-      }
 
-      if (!res.ok) {
+      const result = await res.json();
+      if (!res.ok)
         throw new Error(result.error || result.message || "Signup failed");
-      }
-      console.log("resultt",result)
-      // document.cookie = `token=${result.token}; path=/; max-age=${
-      //   7 * 24 * 60 * 60
-      // }; secure; samesite=strict`;
-      toast.success("Signup successful!..");
+      setCookie("user", JSON.stringify(result.user), {
+        path: "/",
+        maxAge: 7 * 24 * 60 * 60,
+      });
+
+      toast.success("Signup successful!");
       router.push("/");
     } catch (err) {
       toast.error(err.message || "Signup error occurred");
@@ -75,11 +69,7 @@ export default function SignupPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div>
               <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                type="text"
-                {...register("username", { required: "Username is required" })}
-              />
+              <Input id="username" type="text" {...register("username")} />
               {errors.username && (
                 <p className="mt-1 text-xs text-red-600">
                   {errors.username.message}
@@ -89,17 +79,7 @@ export default function SignupPage() {
 
             <div>
               <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                {...register("email", {
-                  required: "Email is required",
-                  pattern: {
-                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                    message: "Invalid email address",
-                  },
-                })}
-              />
+              <Input id="email" type="email" {...register("email")} />
               {errors.email && (
                 <p className="mt-1 text-xs text-red-600">
                   {errors.email.message}
@@ -109,17 +89,7 @@ export default function SignupPage() {
 
             <div>
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                {...register("password", {
-                  required: "Password is required",
-                  minLength: {
-                    value: 6,
-                    message: "Password must be at least 6 characters",
-                  },
-                })}
-              />
+              <Input id="password" type="password" {...register("password")} />
               {errors.password && (
                 <p className="mt-1 text-xs text-red-600">
                   {errors.password.message}
@@ -132,9 +102,7 @@ export default function SignupPage() {
               <Input
                 id="confirmPassword"
                 type="password"
-                {...register("confirmPassword", {
-                  required: "Confirm password is required",
-                })}
+                {...register("confirmPassword")}
               />
               {errors.confirmPassword && (
                 <p className="mt-1 text-xs text-red-600">
@@ -146,6 +114,7 @@ export default function SignupPage() {
             <Button type="submit" disabled={loading} className="w-full">
               {loading ? "Signing up..." : "Sign Up"}
             </Button>
+
             <p className="text-center mt-4 text-sm text-gray-600">
               Already have an account?{" "}
               <Link

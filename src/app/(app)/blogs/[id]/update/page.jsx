@@ -4,19 +4,20 @@ import { useParams, useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import { blogValidationSchema } from '@/app/(app)/blogs/validations/updateschema';
 import 'react-toastify/dist/ReactToastify.css';
 
 export default function EditBlog() {
   const { id } = useParams();
   const router = useRouter();
 
-  const [formData, setFormData] = useState({
+  const [initialValues, setInitialValues] = useState({
     title: '',
     content: '',
     image: null,
   });
-
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -39,7 +40,7 @@ export default function EditBlog() {
         }
 
         const data = await response.json();
-        setFormData({ title: data.title, content: data.content, image: null });
+        setInitialValues({ title: data.title, content: data.content, image: null });
       } catch (err) {
         toast.error(err.message || 'Failed to load blog');
         router.push('/login');
@@ -51,25 +52,16 @@ export default function EditBlog() {
     fetchBlog();
   }, [id, router]);
 
-  const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === 'image' ? files[0] : value,
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (values) => {
     const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
     if (!token) return toast.error('Please log in first');
 
     try {
       const formDataToSend = new FormData();
-      formDataToSend.append('title', formData.title);
-      formDataToSend.append('content', formData.content);
-      if (formData.image) {
-        formDataToSend.append('image', formData.image);
+      formDataToSend.append('title', values.title);
+      formDataToSend.append('content', values.content);
+      if (values.image) {
+        formDataToSend.append('image', values.image);
       }
 
       const response = await fetch(`/api/blog/${id}`, {
@@ -95,6 +87,7 @@ export default function EditBlog() {
 
   return (
     <div className="p-6 max-w-xl mx-auto space-y-4">
+      <ToastContainer />
       <h1 className="text-2xl font-bold">Edit Blog</h1>
 
       <Button
@@ -105,31 +98,50 @@ export default function EditBlog() {
         ← Back
       </Button>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <Input
-          name="title"
-          value={formData.title}
-          onChange={handleChange}
-          placeholder="Title"
-          required
-        />
-        <Textarea
-          name="content"
-          value={formData.content}
-          onChange={handleChange}
-          placeholder="Content"
-          required
-          rows={10}
-        />
-        <Input type="file" name="image" onChange={handleChange} />
+      <Formik
+        initialValues={initialValues}
+        enableReinitialize
+        validationSchema={blogValidationSchema}
+        onSubmit={handleSubmit}
+      >
+        {({ setFieldValue }) => (
+          <Form className="space-y-4">
+            <div>
+              <Field
+                as={Input}
+                name="title"
+                placeholder="Title"
+              />
+              <ErrorMessage name="title" component="div" className="text-red-500 text-sm" />
+            </div>
 
-        <Button
-          type="submit"
-          className="bg-blue-600 hover:bg-blue-700 text-white"
-        >
-          Update
-        </Button>
-      </form>
+            <div>
+              <Field
+                as={Textarea}
+                name="content"
+                placeholder="Content"
+                rows={10}
+              />
+              <ErrorMessage name="content" component="div" className="text-red-500 text-sm" />
+            </div>
+
+            <div>
+              <Input
+                type="file"
+                name="image"
+                onChange={(e) => {
+                  setFieldValue('image', e.target.files[0]);
+                }}
+              />
+              <ErrorMessage name="image" component="div" className="text-red-500 text-sm" />
+            </div>
+
+            <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white">
+              Update
+            </Button>
+          </Form>
+        )}
+      </Formik>
     </div>
   );
 }

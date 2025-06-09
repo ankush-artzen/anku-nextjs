@@ -6,8 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { toast, ToastContainer } from 'react-toastify';
-import { useDispatch } from 'react-redux'; // ✅ Import useDispatch
-import { clearAllBlogs} from '@/redux/slices/blogSlice';
+import { useDispatch } from 'react-redux';
+import { clearAllBlogs } from '@/redux/slices/blogSlice';
+import { validateBlogData } from '@/app/(app)/blogs/validations/blogSchema';
 import 'react-toastify/dist/ReactToastify.css';
 
 function getCookieValue(name) {
@@ -19,7 +20,7 @@ function getCookieValue(name) {
 
 const CreateBlog = () => {
   const router = useRouter();
-  const dispatch = useDispatch(); // ✅ Redux dispatch
+  const dispatch = useDispatch();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [image, setImage] = useState(null);
@@ -34,23 +35,22 @@ const CreateBlog = () => {
     }
   }, [router]);
 
-  const validate = () => {
-    const newErrors = {};
-    if (!title.trim()) newErrors.title = 'Title is required';
-    if (!content.trim()) newErrors.content = 'Content is required';
-    return newErrors;
+  const validate = async () => {
+    const { isValid, errors } = await validateBlogData({ title, content });
+    if (!isValid) {
+      setErrors(errors);
+      return false;
+    }
+    setErrors({});
+    return true;
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    const validationErrors = validate();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
+    const isValid = await validate();
+    if (!isValid) return;
 
-    setErrors({});
     setIsSubmitting(true);
 
     const formData = new FormData();
@@ -76,10 +76,7 @@ const CreateBlog = () => {
         throw new Error(errorData.message || 'Failed to create blog');
       }
 
-      // ✅ Clear blog cache for page 1 after successful creation
       dispatch(clearAllBlogs());
-
-
       toast.success('Blog created successfully!');
       setTimeout(() => router.push('/blogs/dashboard'), 1500);
     } catch (err) {
@@ -103,6 +100,7 @@ const CreateBlog = () => {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Enter blog title"
+            className={errors.title ? 'border-red-500' : ''}
           />
           {errors.title && <p className="text-red-600 text-sm mt-1">{errors.title}</p>}
         </div>
@@ -112,9 +110,16 @@ const CreateBlog = () => {
           <Textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="Write your blog content here..."
+            placeholder="Write your blog content here (minimum 25 words)..."
+            className={errors.content ? 'border-red-500' : ''}
+            rows={8}
           />
           {errors.content && <p className="text-red-600 text-sm mt-1">{errors.content}</p>}
+          {content && !errors.content && (
+            <p className="text-sm text-gray-500 mt-1">
+              Word count: {content.trim().split(/\s+/).filter(Boolean).length}
+            </p>
+          )}
         </div>
 
         <div>
@@ -123,8 +128,13 @@ const CreateBlog = () => {
             type="file"
             accept="image/jpeg,image/png,image/gif"
             onChange={(e) => setImage(e.target.files[0])}
+            className="block w-full text-sm text-gray-500
+              file:mr-4 file:py-2 file:px-4
+              file:rounded-md file:border-0
+              file:text-sm file:font-semibold
+              file:bg-gray-50 file:text-gray-700
+              hover:file:bg-gray-100"
           />
-          {errors.image && <p className="text-red-600 text-sm mt-1">{errors.image}</p>}
         </div>
 
         {errors.submit && <p className="text-red-600 text-sm">{errors.submit}</p>}
@@ -132,7 +142,7 @@ const CreateBlog = () => {
         <Button
           type="submit"
           disabled={isSubmitting}
-          className={`bg-black-600 text-black hover:bg-black-700 ${
+          className={`${
             isSubmitting ? 'cursor-not-allowed opacity-70' : ''
           }`}
         >

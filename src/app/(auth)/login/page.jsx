@@ -1,6 +1,7 @@
 "use client";
 
 import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
@@ -10,13 +11,16 @@ import { Label } from "@/components/ui/label";
 import { setCookie } from "cookies-next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
+import { loginSchema } from "@/lib/validations/authSchema"; // ✅ import schema
 
 export default function LoginPage() {
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm();
+  } = useForm({
+    resolver: yupResolver(loginSchema), // ✅ apply resolver
+  });
 
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -28,11 +32,8 @@ export default function LoginPage() {
       const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: data.email,
-          password: data.password,
-        }),
-        credentials: "include", // ✅ Important for receiving HttpOnly cookies
+        body: JSON.stringify(data),
+        credentials: "include",
       });
 
       const result = await res.json();
@@ -40,10 +41,10 @@ export default function LoginPage() {
       if (!res.ok) throw new Error(result.message || "Login failed");
       setCookie("user", JSON.stringify(result.user), {
         path: "/",
-        maxAge: 7 * 24 * 60 * 60, // 7 days
+        maxAge: 7 * 24 * 60 * 60,
       });
       toast.success("Login successful!");
-      router.push("/"); // Redirect after successful login
+      router.push("/");
     } catch (err) {
       toast.error(err.message || "Login error");
     } finally {
@@ -63,11 +64,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div>
               <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                {...register("email", { required: "Email is required" })}
-              />
+              <Input id="email" type="email" {...register("email")} />
               {errors.email && (
                 <p className="mt-1 text-xs text-red-600">
                   {errors.email.message}
@@ -77,11 +74,7 @@ export default function LoginPage() {
 
             <div>
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                {...register("password", { required: "Password is required" })}
-              />
+              <Input id="password" type="password" {...register("password")} />
               {errors.password && (
                 <p className="mt-1 text-xs text-red-600">
                   {errors.password.message}
