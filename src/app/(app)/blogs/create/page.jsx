@@ -110,7 +110,7 @@ const CreateBlog = () => {
           <Textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="Write your blog content here (minimum 25 words)..."
+            placeholder="Write your blog content here ..."
             className={errors.content ? 'border-red-500' : ''}
             rows={8}
           />
