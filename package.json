@@ -4,10 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev ",
-    "build": "npm run setup && next build",
+    "build": "npm run prisma:generate && next build",
     "start": "next start",
     "lint": "next lint",
-    "setup": "npx prisma generate",
     "prisma:pull": "npx prisma db pull  --schema=src/prisma/schema.prisma",
     "prisma:push": "npx prisma db push --schema=src/prisma/schema.prisma",
     "prisma:generate": "npx prisma generate --schema=src/prisma/schema.prisma"
