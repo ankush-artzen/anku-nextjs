@@ -27,7 +27,7 @@ export default function LoginPage() {
 
   async function onSubmit(data) {
     setLoading(true);
-
+  
     try {
       const res = await fetch("/api/login", {
         method: "POST",
@@ -35,16 +35,19 @@ export default function LoginPage() {
         body: JSON.stringify(data),
         credentials: "include",
       });
-
+  
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Login failed");
+      }
+  
       const result = await res.json();
-
-      if (!res.ok) throw new Error(result.message || "Login failed");
-      setCookie("user", JSON.stringify(result.user), {
-        path: "/",
-        maxAge: 7 * 24 * 60 * 60,
-      });
       toast.success("Login successful!");
+      
+      // Force a refresh of client-side state
       router.push("/");
+      router.refresh();
+      
     } catch (err) {
       toast.error(err.message || "Login error");
     } finally {

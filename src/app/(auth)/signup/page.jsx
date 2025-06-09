@@ -18,6 +18,7 @@ export default function SignupPage() {
     register,
     handleSubmit,
     formState: { errors },
+    reset,
   } = useForm({
     resolver: yupResolver(signupSchema),
   });
@@ -37,26 +38,27 @@ export default function SignupPage() {
           email: data.email,
           password: data.password,
         }),
-        credentials: "include",
+        credentials: "include", // Important for cookies
       });
 
       const result = await res.json();
-      if (!res.ok)
+      
+      if (!res.ok) {
         throw new Error(result.error || result.message || "Signup failed");
-      setCookie("user", JSON.stringify(result.user), {
-        path: "/",
-        maxAge: 7 * 24 * 60 * 60,
-      });
+      }
 
       toast.success("Signup successful!");
       router.push("/");
+      router.refresh(); // Refresh to update auth state
+      
     } catch (err) {
       toast.error(err.message || "Signup error occurred");
+      console.error("Signup error:", err);
     } finally {
       setLoading(false);
+      reset(); // Reset form after submission
     }
   }
-
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
       <Card className="w-full max-w-md">
