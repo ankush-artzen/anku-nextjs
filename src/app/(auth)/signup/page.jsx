@@ -62,17 +62,24 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-center text-2xl font-semibold">
+    <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+      {/* Outer Container Padding */}
+      <Card className="w-full max-w-md p-6">
+        {/* Card Padding */}
+        <CardHeader className="pb-6">
+          {/* Card Header Padding Bottom */}
+          <CardTitle className="text-center text-2xl font-semibold mb-2">
+            {/* Card Title Styling and Margin Bottom */}
             Sign Up
           </CardTitle>
         </CardHeader>
 
         <CardContent>
+          {/* Card Content (Spacing handled within the form) */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div>
+            {/* Form Spacing */}
+            <div className="space-y-2">
+              {/* Input Group Spacing */}
               <Label htmlFor="username">Username</Label>
               <Input id="username" type="text" {...register("username")} />
               {errors.username && (
@@ -82,7 +89,8 @@ export default function SignupPage() {
               )}
             </div>
 
-            <div>
+            <div className="space-y-2">
+              {/* Input Group Spacing */}
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" {...register("email")} />
               {errors.email && (
@@ -92,7 +100,8 @@ export default function SignupPage() {
               )}
             </div>
 
-            <div>
+            <div className="space-y-2">
+              {/* Input Group Spacing */}
               <Label htmlFor="password">Password</Label>
               <Input id="password" type="password" {...register("password")} />
               {errors.password && (
@@ -102,7 +111,8 @@ export default function SignupPage() {
               )}
             </div>
 
-            <div>
+            <div className="space-y-2">
+              {/* Input Group Spacing */}
               <Label htmlFor="confirmPassword">Confirm Password</Label>
               <Input
                 id="confirmPassword"
@@ -116,7 +126,11 @@ export default function SignupPage() {
               )}
             </div>
 
-            <Button type="submit" disabled={loading} className="w-full">
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full mt-4 cursor-pointer"
+            >
               {loading ? "Signing up..." : "Sign Up"}
             </Button>
 

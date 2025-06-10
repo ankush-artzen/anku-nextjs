@@ -54,27 +54,42 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted p-6">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-center">Reset Your Password</CardTitle>
+      {/* Outer Container Padding */}
+      <Card className="w-full max-w-md p-6">
+        {/* Card Padding */}
+        <CardHeader className="pb-6">
+          {/* Card Header Padding Bottom */}
+          <CardTitle className="text-center text-2xl font-semibold mb-2">
+            {/* Card Title Styling and Margin Bottom */}
+            Reset Your Password
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
-              type="password"
-              placeholder="New Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-            <Input
-              type="password"
-              placeholder="Confirm Password"
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              required
-            />
-            <Button type="submit" disabled={loading} className="w-full">
+          {/* Card Content (Spacing handled within the form) */}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Form Spacing */}
+            <div className="space-y-2">
+              {/* Input Group Spacing */}
+              <Input
+                type="password"
+                placeholder="New Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              {/* Input Group Spacing */}
+              <Input
+                type="password"
+                placeholder="Confirm Password"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                required
+              />
+            </div>
+            <Button type="submit" disabled={loading} className="w-full mt-4 cursor-pointor">
+              {/* Button Margin Top */}
               {loading ? 'Resetting...' : 'Reset Password'}
             </Button>
           </form>

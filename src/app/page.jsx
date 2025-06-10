@@ -118,7 +118,7 @@ export default function HomePage() {
                         </p>
                       </CardHeader>
                       <CardContent>
-                        <CardDescription>
+                        <CardDescription className="mb-4">
                           {content.length > 150
                             ? content.slice(0, 150) + "..."
                             : content}

@@ -42,17 +42,24 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
+    <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+      {/* Outer Container Padding */}
       <ToastContainer position="top-right" autoClose={3000} />
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-center text-2xl font-semibold">
+      <Card className="w-full max-w-md p-6">
+        {/* Card Padding */}
+        <CardHeader className="pb-6">
+          {/* Card Header Padding Bottom */}
+          <CardTitle className="text-center text-2xl font-semibold mb-2">
+            {/* Card Title Styling and Margin Bottom */}
             Forgot Password
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-            <div>
+          {/* Card Content (Spacing handled within the form) */}
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {/* Form Spacing */}
+            <div className="space-y-2">
+              {/* Input Group Spacing */}
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
@@ -67,7 +74,8 @@ export default function ForgotPasswordPage() {
               )}
             </div>
 
-            <Button type="submit" disabled={loading} className="w-full">
+            <Button type="submit" disabled={loading} className="w-full mt-4 cursor-pointer">
+              {/* Button Margin Top */}
               {loading ? "Sending..." : "Send Reset Link"}
             </Button>
           </form>
