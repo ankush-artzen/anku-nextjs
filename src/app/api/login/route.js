@@ -35,6 +35,7 @@ export async function POST(req) {
       name: "token",
       value: token,
       maxAge: 7 * 24 * 60 * 60, // 7 days
+      httpOnly: "false",
       path: "/",
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
