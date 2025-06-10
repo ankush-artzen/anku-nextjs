@@ -23,19 +23,17 @@ export async function POST(req) {
     // Compare password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return NextResponse.json({ message: "Wrong Password Please Try Again " }, { status: 401 });
+      return NextResponse.json({ message: "Wrong Password. Please try again." }, { status: 401 });
     }
 
-    // Create JWT token with user object (or relevant fields)
+    // Create JWT token
     const token = createToken(user);
 
-    // Set token cookie (httpOnly, secure in prod)
+    // Set cookie
     const cookieStore = cookies();
-    cookieStore.set({
-      name: "token",
-      value: token,
-      maxAge: 7 * 24 * 60 * 60, // 7 days
-      httpOnly: "false",
+    cookieStore.set("token", token, {
+      maxAge: 7 * 24 * 60 * 60,
+      httpOnly: false,
       path: "/",
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
@@ -48,6 +46,7 @@ export async function POST(req) {
         username: user.username,
         email: user.email,
       },
+      token,
     });
   } catch (err) {
     console.error("Login error:", err);
