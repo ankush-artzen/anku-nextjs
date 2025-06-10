@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { setCookie } from "cookies-next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-import { loginSchema } from "@/lib/validations/authSchema"; // ✅ import schema
+import { loginSchema } from "@/lib/validations/authSchema";
 
 export default function LoginPage() {
   const {
@@ -19,7 +19,7 @@ export default function LoginPage() {
     handleSubmit,
     formState: { errors },
   } = useForm({
-    resolver: yupResolver(loginSchema), // ✅ apply resolver
+    resolver: yupResolver(loginSchema),
   });
 
   const [loading, setLoading] = useState(false);
@@ -27,7 +27,7 @@ export default function LoginPage() {
 
   async function onSubmit(data) {
     setLoading(true);
-  
+
     try {
       const res = await fetch("/api/login", {
         method: "POST",
@@ -35,19 +35,18 @@ export default function LoginPage() {
         body: JSON.stringify(data),
         credentials: "include",
       });
-  
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Login failed");
-      }
-  
+
       const result = await res.json();
+
+      if (!res.ok) throw new Error(result.message || "Login failed");
+
+      setCookie("user", JSON.stringify(result.user), {
+        path: "/",
+        maxAge: 7 * 24 * 60 * 60,
+      });
+
       toast.success("Login successful!");
-      
-      // Force a refresh of client-side state
       router.push("/");
-      router.refresh();
-      
     } catch (err) {
       toast.error(err.message || "Login error");
     } finally {
@@ -63,6 +62,7 @@ export default function LoginPage() {
             Login
           </CardTitle>
         </CardHeader>
+
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div>
@@ -99,7 +99,7 @@ export default function LoginPage() {
               </Link>
             </p>
 
-            <p className="text-center mt-4 text-sm text-gray-600">
+            <p className="text-center mt-2 text-sm text-gray-600">
               <Link
                 href="/forgot-password"
                 className="text-blue-600 hover:underline"
