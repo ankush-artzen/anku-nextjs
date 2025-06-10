@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
+import { cookies } from "next/headers";
 
 const PROTECTED_ROUTES = [
   "/blogs/create",
@@ -14,68 +15,100 @@ const AUTH_ROUTES = [
   "/reset-password",
 ];
 
-export async function middleware(req) {
-  const url = req.nextUrl;
-  let pathname = url.pathname;
+const cookieConfig = {
+  path: "/",
+  sameSite: "lax",
+  secure: process.env.NODE_ENV === "production",
+  maxAge: 7 * 24 * 60 * 60, // 1 week
+};
 
-  // Normalize trailing slash (except root "/")
+// Helper function to get token from request (similar to next-auth approach)
+async function getToken(request) {
+  // First try getting from cookies() which works in Server Components
+  const cookieStore = cookies();
+  let token = cookieStore.get("token")?.value;
+  
+  // If not found, try getting from request cookies (for API routes)
+  if (!token) {
+    const cookieHeader = request.headers.get("cookie");
+    if (cookieHeader) {
+      const cookies = Object.fromEntries(
+        cookieHeader.split(";").map(c => {
+          const [key, ...rest] = c.trim().split("=");
+          return [key, rest.join("=")];
+        })
+      );
+      token = cookies.token;
+    }
+  }
+  
+  return token;
+}
+
+export async function middleware(request) {
+  const { nextUrl } = request;
+  let pathname = nextUrl.pathname;
+
+  // Normalize path (remove trailing slash except for root)
   if (pathname.length > 1 && pathname.endsWith("/")) {
     pathname = pathname.slice(0, -1);
-    console.log("Normalized pathname:", pathname);
   }
 
-  console.log("Request URL:", url.href);
-  console.log("Pathname:", pathname);
-
-  // Check all cookies
-  console.log("All cookies:", req.cookies.getAll());
-
-  const token = req.cookies.get("token")?.value;
-  console.log("Token from cookies:", token);
+  // Get token using the helper function
+  const token = await getToken(request);
+  console.log(`Middleware - Path: ${pathname}, Token: ${!!token}`);
 
   const isProtectedRoute = PROTECTED_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(route + "/")
+    route => pathname === route || pathname.startsWith(`${route}/`)
   );
-  console.log("Is protected route:", isProtectedRoute);
-
+  
   const isAuthRoute = AUTH_ROUTES.includes(pathname);
-  console.log("Is auth route:", isAuthRoute);
 
-  // Redirect logged-in users away from auth routes
-  if (isAuthRoute && token) {
-    console.log("User is on an auth route with token. Verifying token...");
-    try {
-      await jwtVerify(token, new TextEncoder().encode(process.env.JWT_SECRET));
-      console.log("Token valid. Redirecting to dashboard...");
-      return NextResponse.redirect(new URL("/blogs/dashboard", req.url));
-    } catch (err) {
-      console.log("Token verification failed:", err.message);
-      return NextResponse.next();
+  // Handle auth routes (login, signup, etc.)
+  if (isAuthRoute) {
+    if (token) {
+      try {
+        await jwtVerify(token, new TextEncoder().encode(process.env.JWT_SECRET));
+        
+        // User is authenticated but trying to access auth route - redirect to dashboard
+        const response = NextResponse.redirect(new URL("/blogs/dashboard", nextUrl));
+        // Ensure cookie is properly set in the response
+        response.cookies.set("token", token, cookieConfig);
+        return response;
+      } catch (error) {
+        // Invalid token - clear it and allow access to auth route
+        const response = NextResponse.next();
+        response.cookies.delete("token");
+        return response;
+      }
     }
+    return NextResponse.next();
   }
 
-  // Enforce token for protected routes
+  // Handle protected routes
   if (isProtectedRoute) {
-    console.log("User is on a protected route.");
     if (!token) {
-      console.log("No token found. Redirecting to login...");
-      return NextResponse.redirect(new URL("/login", req.url));
+      // No token - redirect to login
+      return NextResponse.redirect(new URL("/login", nextUrl));
     }
 
     try {
       await jwtVerify(token, new TextEncoder().encode(process.env.JWT_SECRET));
-      console.log("Token is valid. Proceeding to protected page.");
-    } catch (err) {
-      console.log("Invalid token. Redirecting to login and clearing cookie...");
-      const response = NextResponse.redirect(new URL("/login", req.url));
-      response.cookies.set("token", "", {
-        maxAge: -1,
-        path: "/",
-      });
+      
+      // Valid token - proceed with request
+      const response = NextResponse.next();
+      // Refresh cookie expiration
+      response.cookies.set("token", token, cookieConfig);
+      return response;
+    } catch (error) {
+      // Invalid token - clear it and redirect to login
+      const response = NextResponse.redirect(new URL("/login", nextUrl));
+      response.cookies.delete("token");
       return response;
     }
   }
 
+  // For non-protected, non-auth routes
   return NextResponse.next();
 }
 

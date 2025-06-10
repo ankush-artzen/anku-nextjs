@@ -31,13 +31,14 @@ export async function POST(req) {
 
     // Set cookie
     const cookieStore = cookies();
-    cookieStore.set("token", token, {
-      maxAge: 7 * 24 * 60 * 60,
-      httpOnly: false,
-      path: "/",
+    cookieStore.set({
+      name: "token",
+      value: token,
+      maxAge: 7 * 24 * 60 * 60, // 7 days
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
     });
+
 
     return NextResponse.json({
       message: "Login successful",
