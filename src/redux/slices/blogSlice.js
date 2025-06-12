@@ -1,3 +1,4 @@
+
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
@@ -12,21 +13,15 @@ const blogSlice = createSlice({
       const { page, blogs } = action.payload;
       state.blog[page] = blogs;
     },
-    clearBlog: (state, action) => {
-      const { page } = action.payload;
-      if (state.blog[page]) {
-        delete state.blog[page];
-      }
-    },
-    // optional: clear all blogs at once
     clearAllBlogs: (state) => {
       state.blog = {};
     },
+    clearPageBlog: (state, action) => {
+      const page = action.payload;
+      delete state.blog[page];
+    }
   },
 });
 
-// ✅ EXPORT ACTIONS
-export const { setPageBlog, clearBlog, clearAllBlogs } = blogSlice.actions;
-
-// ✅ EXPORT REDUCER
+export const { setPageBlog, clearAllBlogs, clearPageBlog } = blogSlice.actions;
 export default blogSlice.reducer;

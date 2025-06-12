@@ -6,13 +6,26 @@ import Link from "next/link";
 import usePaginatedBlogsContainer from "@/lib/hooks/PaginatedBlogsContainer";
 import { useDispatch } from "react-redux";
 import { clearAllBlogs } from "@/redux/slices/blogSlice";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function MyBlogsPage() {
-  const { blogs, user, page, totalPages, loading: loadingFromHook, error, setPage } =
-    usePaginatedBlogsContainer();
+  const {
+    blogs,
+    user,
+    page,
+    totalPages,
+    loading: loadingFromHook,
+    error,
+    setPage,
+  } = usePaginatedBlogsContainer();
   const dispatch = useDispatch();
 
   const [showLoader, setShowLoader] = useState(true);
@@ -53,7 +66,9 @@ export default function MyBlogsPage() {
       {/* Header Section */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold text-blue-900 tracking-tight">Dashboard</h2>
+          <h2 className="text-3xl font-bold text-blue-900 tracking-tight">
+            Dashboard
+          </h2>
           <p className="text-muted-foreground">Manage your blogs with ease.</p>
         </div>
         <Link href="/blogs/create">
@@ -70,7 +85,9 @@ export default function MyBlogsPage() {
               <AvatarFallback>CN</AvatarFallback>
             </Avatar>
             <div className="ml-4">
-              <CardTitle className="text-lg font-semibold">{user.username || user.email}</CardTitle>
+              <CardTitle className="text-lg font-semibold">
+                {user.username || user.email}
+              </CardTitle>
               <CardDescription>Welcome to your blog dashboard!</CardDescription>
             </div>
           </CardHeader>
@@ -94,7 +111,9 @@ export default function MyBlogsPage() {
                     />
                   )}
                   <CardHeader>
-                    <CardTitle className="text-lg font-semibold">{blog.title}</CardTitle>
+                    <CardTitle className="text-lg font-semibold">
+                      {blog.title}
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <CardDescription className="text-sm text-muted-foreground line-clamp-3 mb-4">
@@ -116,11 +135,11 @@ export default function MyBlogsPage() {
               onPageChange={handlePageClick}
               forcePage={page - 1}
               containerClassName="flex justify-center mt-8 gap-2 flex-wrap"
-              pageClassName="border rounded-md px-3 py-1 text-sm text-gray-700 hover:bg-blue-100 transition-colors"
+              pageClassName="border rounded-md px-3 py-1 text-sm text-gray-700 hover:bg-blue-100 transition-colors cursor-pointer"
               activeClassName="bg-blue-500 text-white"
-              previousClassName="border rounded-md px-3 py-1 text-sm text-gray-700 hover:bg-blue-100 transition-colors"
-              nextClassName="border rounded-md px-3 py-1 text-sm text-gray-700 hover:bg-blue-100 transition-colors"
-              breakClassName="px-2 py-1 text-gray-500"
+              previousClassName="border rounded-md px-3 py-1 text-sm text-gray-700 hover:bg-blue-100 transition-colors cursor-pointer"
+              nextClassName="border rounded-md px-3 py-1 text-sm text-gray-700 hover:bg-blue-100 transition-colors cursor-pointer"
+              breakClassName="px-2 py-1 text-gray-500 cursor-default"
             />
           )}
         </>

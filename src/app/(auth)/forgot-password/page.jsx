@@ -1,21 +1,26 @@
-'use client';
+"use client";
 
 import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
 import { useState } from "react";
+import Link from "next/link";
 import { toast } from "react-toastify";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { forgotPasswordSchema } from "@/lib/validations/authSchema";
+
 
 export default function ForgotPasswordPage() {
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm();
+  } = useForm({
+    resolver: yupResolver(forgotPasswordSchema),
+  });
 
   const [loading, setLoading] = useState(false);
 
@@ -31,7 +36,8 @@ export default function ForgotPasswordPage() {
 
       const result = await res.json();
 
-      if (!res.ok) throw new Error(result.message || "Failed to send reset link");
+      if (!res.ok)
+        throw new Error(result.message || "Failed to send reset link");
 
       toast.success(result.message || "Reset link sent successfully!");
     } catch (err) {
@@ -43,29 +49,21 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
-      {/* Outer Container Padding */}
-      <ToastContainer position="top-right" autoClose={3000} />
       <Card className="w-full max-w-md p-6">
-        {/* Card Padding */}
         <CardHeader className="pb-6">
-          {/* Card Header Padding Bottom */}
           <CardTitle className="text-center text-2xl font-semibold mb-2">
-            {/* Card Title Styling and Margin Bottom */}
             Forgot Password
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {/* Card Content (Spacing handled within the form) */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Form Spacing */}
             <div className="space-y-2">
-              {/* Input Group Spacing */}
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="Enter your registered email"
-                {...register("email", { required: "Email is required" })}
+                {...register("email")}
               />
               {errors.email && (
                 <p className="mt-1 text-xs text-red-600">
@@ -74,11 +72,24 @@ export default function ForgotPasswordPage() {
               )}
             </div>
 
-            <Button type="submit" disabled={loading} className="w-full mt-4 cursor-pointer">
-              {/* Button Margin Top */}
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full mt-4 cursor-pointer"
+            >
               {loading ? "Sending..." : "Send Reset Link"}
             </Button>
           </form>
+
+          {/* Your new text here */}
+          <p className="text-center mt-4 text-sm text-gray-600">
+            <Link
+              href="/login"
+              className="text-blue-600 hover:underline cursor-pointer"
+            >
+              Go back to login page
+            </Link>
+          </p>
         </CardContent>
       </Card>
     </div>

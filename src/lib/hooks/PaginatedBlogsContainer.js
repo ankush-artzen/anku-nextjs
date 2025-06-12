@@ -19,7 +19,7 @@ export default function usePaginatedBlogsContainer(initialPage = 1, limit = 6) {
 
   useEffect(() => {
     const fetchMyBlogs = async () => {
-      if (cachedBlogs[page]) return; 
+      if (cachedBlogs[page]) return;
 
       setLoading(true);
       setError('');
@@ -48,7 +48,8 @@ export default function usePaginatedBlogsContainer(initialPage = 1, limit = 6) {
 
         dispatch(setPageBlog({ page, blogs: data.blogs || [] }));
         setUser(data.user || null);
-        setTotalPages(data.pagination?.totalPages || 1);
+        setTotalPages(data?.pagination?.totalPages > 0 ? data.pagination.totalPages : 1);
+
       } catch (err) {
         toast.error(err.message || 'Something went wrong');
         setError(err.message);

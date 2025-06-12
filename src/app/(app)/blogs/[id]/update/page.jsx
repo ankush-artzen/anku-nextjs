@@ -1,4 +1,5 @@
 'use client';
+
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
@@ -6,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { toast, ToastContainer } from 'react-toastify';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
-import { blogValidationSchema } from '@/app/(app)/blogs/validations/updateschema';
+import { blogValidationSchema } from '@/lib/validations/updateSchema';
 import 'react-toastify/dist/ReactToastify.css';
 
 export default function EditBlog() {
@@ -86,14 +87,14 @@ export default function EditBlog() {
   if (loading) return <p className="p-6">Loading blog...</p>;
 
   return (
-    <div className="p-6 max-w-xl mx-auto space-y-4">
-      <ToastContainer />
-      <h1 className="text-2xl font-bold">Edit Blog</h1>
+    <div className="p-6 max-w-2xl mx-auto">
+      <ToastContainer position="top-right" autoClose={3000} />
+      <h1 className="text-2xl font-bold mb-6">Edit Blog</h1>
 
       <Button
         type="button"
         onClick={() => router.back()}
-        className="bg-gray-300 text-black hover:bg-gray-400"
+        className="bg-gray-300 text-black hover:bg-gray-400 mb-4"
       >
         ← Back
       </Button>
@@ -105,35 +106,46 @@ export default function EditBlog() {
         onSubmit={handleSubmit}
       >
         {({ setFieldValue }) => (
-          <Form className="space-y-4">
-            <div>
+          <Form className="space-y-6" noValidate>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Title*</label>
               <Field
                 as={Input}
                 name="title"
-                placeholder="Title"
+                placeholder="Enter blog title"
+                className="border-gray-300"
               />
-              <ErrorMessage name="title" component="div" className="text-red-500 text-sm" />
+              <ErrorMessage name="title" component="div" className="text-red-600 text-sm" />
             </div>
 
-            <div>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Content*</label>
               <Field
                 as={Textarea}
                 name="content"
-                placeholder="Content"
-                rows={10}
+                placeholder="Write your blog content here..."
+                rows={8}
+                className="border-gray-300"
               />
-              <ErrorMessage name="content" component="div" className="text-red-500 text-sm" />
+              <ErrorMessage name="content" component="div" className="text-red-600 text-sm" />
             </div>
 
-            <div>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Featured Image</label>
               <Input
                 type="file"
                 name="image"
                 onChange={(e) => {
                   setFieldValue('image', e.target.files[0]);
                 }}
+                className="block w-full text-sm text-gray-500
+                  file:mr-4 file:py-2 file:px-4
+                  file:rounded-md file:border-0
+                  file:text-sm file:font-semibold
+                  file:bg-gray-50 file:text-gray-700
+                  hover:file:bg-gray-100"
               />
-              <ErrorMessage name="image" component="div" className="text-red-500 text-sm" />
+              <ErrorMessage name="image" component="div" className="text-red-600 text-sm" />
             </div>
 
             <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white">

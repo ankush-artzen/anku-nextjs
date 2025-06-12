@@ -1,18 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { getCookie } from 'cookies-next';
 
-// Helper: get token from cookie
-// function getTokenFromCookie() {
-//   const token = getCookie('token');
-//   console.log("toke *****************",token);
-//   if (typeof document === 'undefined') return null;
-//   const value = `; ${document.cookie}`;
-//   console.log("myCookie",value);
-//   const match = document.cookie.match(new RegExp('(^| )token=([^;]+)'));
-//   return match ? match[2] : null;
-// }
 
-// Optional: decode user from JWT token payload (if your token has user info)
 function parseJwt(token) {
   try {
     return JSON.parse(atob(token.split('.')[1]));

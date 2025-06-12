@@ -4,11 +4,15 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { jwtDecode } from "jwt-decode";
-import DeleteConfirm from "@/components/ui/DeleteConfirm";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import { useDispatch, useSelector } from "react-redux";
+import { clearAllBlogs } from "@/redux/slices/blogSlice";
+import { clearPublicBlogs } from "@/redux/slices/publicSlice";
 
 export default function BlogDetailPage() {
   const { id } = useParams();
   const router = useRouter();
+  const dispatch = useDispatch();
 
   const [blog, setBlog] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -17,7 +21,6 @@ export default function BlogDetailPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
-    // Extract user ID from token
     const token = document.cookie
       .split("; ")
       .find((row) => row.startsWith("token="))
@@ -25,7 +28,7 @@ export default function BlogDetailPage() {
     if (token) {
       try {
         const decoded = jwtDecode(token);
-        setCurrentUserId(decoded.id); // Assuming JWT payload includes "id"
+        setCurrentUserId(decoded.id);
       } catch (err) {
         console.error("Invalid token:", err);
       }
@@ -73,6 +76,10 @@ export default function BlogDetailPage() {
         throw new Error(data.message || "Failed to delete blog");
       }
 
+      // Clear all cached blogs in Redux
+      dispatch(clearAllBlogs());
+      dispatch(clearPublicBlogs());
+
       toast.success("Blog deleted successfully");
       router.push("/blogs/dashboard");
     } catch (err) {
@@ -81,6 +88,9 @@ export default function BlogDetailPage() {
   };
 
   const handleEdit = () => {
+    // Clear cache before navigating to edit page
+    dispatch(clearAllBlogs());
+    dispatch(clearPublicBlogs());
     router.push(`/blogs/${id}/update`);
   };
 
@@ -102,7 +112,6 @@ export default function BlogDetailPage() {
       )}
       <p className="text-gray-700 whitespace-pre-wrap">{blog.content}</p>
 
-      {/* Show Edit/Delete only if user is blog owner */}
       {isOwner && (
         <div className="flex gap-4 mt-6">
           <button
@@ -119,11 +128,13 @@ export default function BlogDetailPage() {
           </button>
         </div>
       )}
-      <DeleteConfirm
+      <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
         onConfirm={handleDelete}
-        onCancel={() => setConfirmOpen(false)}
+        title="Wanna Delete?"
+        description="Are you sure you want to delete this blog?"
+        confirmLabel="Delete"
       />
     </div>
   );

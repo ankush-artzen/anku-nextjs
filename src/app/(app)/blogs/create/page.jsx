@@ -7,23 +7,29 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { toast, ToastContainer } from 'react-toastify';
 import { useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { clearAllBlogs } from '@/redux/slices/blogSlice';
-import { validateBlogData } from '@/app/(app)/blogs/validations/blogSchema';
+import { clearPageBlog } from '@/redux/slices/blogSlice';
+
+import { validateBlogData } from '@/lib/validations/blogSchema';
 import 'react-toastify/dist/ReactToastify.css';
 
-function getCookieValue(name) {
+const getCookieValue = (name) => {
   if (typeof document === 'undefined') return null;
   const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-  if (match) return match[2];
-  return null;
-}
+  return match ? decodeURIComponent(match[2]) : null;
+};
 
 const CreateBlog = () => {
   const router = useRouter();
   const dispatch = useDispatch();
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [image, setImage] = useState(null);
+
+  const [formData, setFormData] = useState({
+    title: '',
+    content: '',
+    image: null,
+    imagePreview: null
+  });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -35,119 +41,150 @@ const CreateBlog = () => {
     }
   }, [router]);
 
-  const validate = async () => {
-    const { isValid, errors } = await validateBlogData({ title, content });
-    if (!isValid) {
-      setErrors(errors);
-      return false;
-    }
-    setErrors({});
-    return true;
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData(prev => ({
+        ...prev,
+        image: file,
+        imagePreview: URL.createObjectURL(file)
+      }));
+    }
+  };
 
-    const isValid = await validate();
-    if (!isValid) return;
+  const validate = async () => {
+    const { isValid, errors } = await validateBlogData(formData);
+    setErrors(errors);
+    return isValid;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!(await validate())) return;
 
     setIsSubmitting(true);
 
-    const formData = new FormData();
-    formData.append('title', title);
-    formData.append('content', content);
-    if (image) formData.append('image', image);
-
     try {
       const token = getCookieValue('token');
-      if (!token) throw new Error('You must be logged in to create a blog.');
+      if (!token) throw new Error('Authentication required');
+
+      const formDataToSend = new FormData();
+      formDataToSend.append('title', formData.title);
+      formDataToSend.append('content', formData.content);
+      if (formData.image) {
+        formDataToSend.append('image', formData.image);
+      }
 
       const res = await fetch('/api/blog/create', {
         method: 'POST',
-        body: formData,
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        credentials: 'include',
+        body: formDataToSend,
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.message || 'Failed to create blog');
+        throw new Error(errorData.message || 'Blog creation failed');
       }
 
-      dispatch(clearAllBlogs());
+
       toast.success('Blog created successfully!');
-      setTimeout(() => router.push('/blogs/dashboard'), 1500);
+
+
+      setTimeout(() => {
+        dispatch(clearPublicBlogs());
+        dispatch(clearAllBlogs());
+        dispatch(clearPageBlog());
+        router.push('/blogs/dashboard');
+      }, 1000);
     } catch (err) {
-      toast.error(err.message);
-      setErrors({ submit: err.message });
+      toast.error(err.message || 'An unexpected error occurred');
+      setErrors(prev => ({ ...prev, submit: err.message }));
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  return (
-    <div className="p-6 max-w-xl mx-auto">
-      <ToastContainer position="top-right" autoClose={3000} />
-      <h1 className="text-2xl font-semibold mb-4">Create Blog</h1>
+  const wordCount = formData.content.trim().split(/\s+/).filter(Boolean).length;
 
-      <form className="space-y-4" noValidate onSubmit={handleSubmit}>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Title</label>
+  return (
+    <div className="p-6 max-w-2xl mx-auto">
+      <ToastContainer position="top-right" autoClose={3000} />
+      <h1 className="text-2xl font-bold mb-6">Create New Blog Post</h1>
+
+      <form className="space-y-6" onSubmit={handleSubmit} noValidate>
+        {/* Title */}
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700">Title*</label>
           <Input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            name="title"
+            value={formData.title}
+            onChange={handleChange}
             placeholder="Enter blog title"
             className={errors.title ? 'border-red-500' : ''}
           />
-          {errors.title && <p className="text-red-600 text-sm mt-1">{errors.title}</p>}
+          {errors.title && <p className="text-red-600 text-sm">{errors.title}</p>}
+          <p className="text-xs text-gray-500">{formData.title.length}/100 characters</p>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Content</label>
+        {/* Content */}
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700">Content*</label>
           <Textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Write your blog content here ..."
-            className={errors.content ? 'border-red-500' : ''}
+            name="content"
+            value={formData.content}
+            onChange={handleChange}
+            placeholder="Write your blog content here..."
+            className={`${errors.content ? 'border-red-500' : ''} min-h-[200px]`}
             rows={8}
           />
-          {errors.content && <p className="text-red-600 text-sm mt-1">{errors.content}</p>}
-          {content && !errors.content && (
-            <p className="text-sm text-gray-500 mt-1">
-              Word count: {content.trim().split(/\s+/).filter(Boolean).length}
-            </p>
-          )}
+          {errors.content && <p className="text-red-600 text-sm">{errors.content}</p>}
+          <div className="flex justify-between text-xs text-gray-500">
+            <span>{wordCount} words</span>
+            <span>{formData.content.length}/5000 characters</span>
+          </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Image</label>
+        {/* Image */}
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700">Featured Image</label>
+          {formData.imagePreview && (
+            <div className="mb-2">
+              <img
+                src={formData.imagePreview}
+                alt="Preview"
+                className="max-w-full h-48 object-cover rounded-md"
+              />
+            </div>
+          )}
           <input
             type="file"
             accept="image/jpeg,image/png,image/gif"
-            onChange={(e) => setImage(e.target.files[0])}
-            className="block w-full text-sm text-gray-500
-              file:mr-4 file:py-2 file:px-4
-              file:rounded-md file:border-0
-              file:text-sm file:font-semibold
-              file:bg-gray-50 file:text-gray-700
-              hover:file:bg-gray-100"
+            onChange={handleImageChange}
+            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100"
           />
+          {errors.image && <p className="text-red-600 text-sm">{errors.image}</p>}
         </div>
 
         {errors.submit && <p className="text-red-600 text-sm">{errors.submit}</p>}
 
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className={`${
-            isSubmitting ? 'cursor-not-allowed opacity-70' : ''
-          }`}
-        >
-          {isSubmitting ? 'Submitting...' : 'Submit'}
-        </Button>
+        {/* Buttons */}
+        <div className="flex gap-3 pt-4">
+          <Button type="submit" disabled={isSubmitting} className="w-24 bg-blue-600 hover:bg-blue-700">
+            {isSubmitting ? 'Creating...' : 'Create'}
+          </Button>
+          <Button type="button" onClick={() => router.back()} variant="outline" className="w-24">
+            Cancel
+          </Button>
+        </div>
       </form>
     </div>
   );

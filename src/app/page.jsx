@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,60 +10,17 @@ import {
 } from "@/components/ui/card";
 import Link from "next/link";
 import ReactPaginate from "react-paginate";
+import usePaginatedPublicBlogs from "@/lib/hooks/usePaginatedPublicBlogs";
 
 export default function HomePage() {
-  const [blogs, setBlogs] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showLoader, setShowLoader] = useState(true);  // new state
-  const [error, setError] = useState(null);
-  const [currentPage, setCurrentPage] = useState(0); // 0-based for react-paginate
-  const [totalPages, setTotalPages] = useState(0);
-  const blogsPerPage = 6;
-
-  const fetchBlogs = async (page = 0) => {
-    setLoading(true);
-    try {
-      const res = await fetch(
-        `/api/blog?page=${page + 1}&limit=${blogsPerPage}`
-      );
-
-      if (!res.ok) throw new Error("Failed to fetch blogs");
-
-      const data = await res.json();
-
-      setBlogs(data.blogs || []);
-      setTotalPages(data.pagination?.totalPages || 0);
-      setError(null);
-    } catch (err) {
-      setError(err.message || "Something went wrong");
-      setBlogs([]);
-      setTotalPages(0);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchBlogs(currentPage);
-  }, [currentPage]);
-
-  // Show loader for at least 3 seconds on loading state changes
-  useEffect(() => {
-    if (loading) {
-      setShowLoader(true);
-    } else {
-      const timer = setTimeout(() => {
-        setShowLoader(false);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [loading]);
+  const { blogs, page, totalPages, loading, error, setPage } =
+    usePaginatedPublicBlogs();
 
   const handlePageClick = ({ selected }) => {
-    setCurrentPage(selected); // react-paginate is zero-based
+    setPage(selected + 1);
   };
 
-  if (loading || showLoader) {
+  if (loading) {
     return (
       <main className="max-w-5xl mx-auto p-8 space-y-16 flex justify-center items-center min-h-[400px]">
         <div className="w-10 h-10 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
@@ -77,14 +33,17 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="text-center space-y-6">
         <h1 className="text-5xl font-extrabold leading-tight tracking-tight">
-          Welcome to <span className="text-blue-600">BlogPro</span>
+          Welcome to{" "}
+          <span className="text-blue-600 cursor-pointer">BlogPro</span>
         </h1>
         <p className="text-lg max-w-xl mx-auto text-muted-foreground">
           Discover insightful articles in BlogPro
         </p>
         <div>
           <Link href="/blogs/create">
-            <Button size="lg">Create Your Own Blog</Button>
+            <Button size="lg" className="cursor-pointer">
+              Create Your Own Blog
+            </Button>
           </Link>
         </div>
       </section>
@@ -98,39 +57,49 @@ export default function HomePage() {
         {!error && (
           <>
             {blogs.length === 0 ? (
-              <p className="text-center text-muted-foreground">No blogs found.</p>
+              <p className="text-center text-muted-foreground">
+                No blogs found.
+              </p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {blogs.map(({ id, title, content, image, author }) => (
-                  <Link key={id} href={`/blogs/${id}`} className="block">
-                    <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
-                      {image && (
-                        <img
-                          src={image}
-                          alt={title}
-                          className="w-full h-48 object-cover rounded-t-xl"
-                        />
-                      )}
-                      <CardHeader>
-                        <CardTitle>{title}</CardTitle>
-                        <p className="text-sm text-muted-foreground">
-                          By {author?.username || "Unknown"}
-                        </p>
-                      </CardHeader>
-                      <CardContent>
-                        <CardDescription className="mb-4">
-                          {content.length > 150
-                            ? content.slice(0, 150) + "..."
-                            : content}
-                        </CardDescription>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
+                {blogs.map((blog, index) => {
+                  if (!blog) return null;
+
+                  const { id, title, content, image, author } = blog;
+
+                  return (
+                    <Link
+                      key={id || index}
+                      href={`/blogs/${id}`}
+                      className="block"
+                    >
+                      <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+                        {image && (
+                          <img
+                            src={image}
+                            alt={title}
+                            className="w-full h-48 object-cover rounded-t-xl"
+                          />
+                        )}
+                        <CardHeader>
+                          <CardTitle>{title}</CardTitle>
+                          <p className="text-sm text-muted-foreground">
+                            By {author?.username || "Unknown"}
+                          </p>
+                        </CardHeader>
+                        <CardContent>
+                          <CardDescription className="mb-4">
+                            {content.length > 150
+                              ? content.slice(0, 150) + "..."
+                              : content}
+                          </CardDescription>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  );
+                })}
               </div>
             )}
-
-            {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex justify-center mt-8">
                 <ReactPaginate
@@ -139,7 +108,7 @@ export default function HomePage() {
                   breakLabel={"..."}
                   pageCount={totalPages}
                   onPageChange={handlePageClick}
-                  forcePage={currentPage}
+                  forcePage={page - 1}
                   containerClassName="flex gap-2 justify-center mt-8 flex-wrap"
                   pageClassName="border rounded-md"
                   pageLinkClassName="px-3 py-1 text-sm text-gray-700 hover:bg-blue-100 transform transition-transform duration-200 hover:scale-105 cursor-pointer"

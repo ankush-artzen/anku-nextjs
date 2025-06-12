@@ -13,6 +13,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { loginSchema } from "@/lib/validations/authSchema";
 
+// ✅ import redux
+import { useDispatch } from "react-redux";
+import { clearAllBlogs } from "@/redux/slices/blogSlice";
+import { clearPublicBlogs } from "@/redux/slices/publicSlice";
+
 export default function LoginPage() {
   const {
     register,
@@ -24,6 +29,7 @@ export default function LoginPage() {
 
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const dispatch = useDispatch();  // ✅ initialize redux dispatch
 
   async function onSubmit(data) {
     setLoading(true);
@@ -45,6 +51,10 @@ export default function LoginPage() {
         maxAge: 7 * 24 * 60 * 60,
       });
 
+      // ✅ Clear blog caches after login
+      dispatch(clearAllBlogs());
+      dispatch(clearPublicBlogs());
+
       toast.success("Login successful!");
       router.push("/");
     } catch (err) {
@@ -56,23 +66,16 @@ export default function LoginPage() {
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
-      {/* Outer Container Padding */}
       <Card className="w-full max-w-md p-6">
-        {/* Card Padding */}
         <CardHeader className="pb-6">
-          {/* Card Header Padding Bottom */}
           <CardTitle className="text-center text-2xl font-semibold mb-2">
-            {/* Card Title Styling and Margin Bottom */}
             Login
           </CardTitle>
         </CardHeader>
 
         <CardContent>
-          {/* Card Content (Spacing handled within the form) */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Form Spacing */}
             <div className="space-y-2">
-              {/* Input Group Spacing */}
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" {...register("email")} />
               {errors.email && (
@@ -83,7 +86,6 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-2">
-              {/* Input Group Spacing */}
               <Label htmlFor="password">Password</Label>
               <Input id="password" type="password" {...register("password")} />
               {errors.password && (
@@ -94,27 +96,18 @@ export default function LoginPage() {
             </div>
 
             <Button type="submit" disabled={loading} className="w-full mt-4 cursor-pointer">
-              {/* Button Margin Top */}
               {loading ? "Logging in..." : "Login"}
             </Button>
 
             <p className="text-center mt-4 text-sm text-gray-600">
               Don&apos;t have an account?{" "}
-              <Link
-                href="/signup"
-                className="text-blue-600 hover:underline font-semibold cursor-pointer"
-
-              >
+              <Link href="/signup" className="text-blue-600 hover:underline font-semibold cursor-pointer">
                 Signup
               </Link>
             </p>
 
             <p className="text-center mt-2 text-sm text-gray-600">
-              <Link
-                href="/forgot-password"
-                className="text-blue-600 hover:underline cursor-pointer"
-              
-              >
+              <Link href="/forgot-password" className="text-blue-600 hover:underline cursor-pointer">
                 Forgot Password?
               </Link>
             </p>

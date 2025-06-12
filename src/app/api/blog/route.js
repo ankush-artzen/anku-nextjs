@@ -1,19 +1,34 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+// import { redis } from "@/lib/utils/redis";  <-- Redis import commented
 
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
-    const page = parseInt(searchParams.get('page')) || 1;
-    const limit = parseInt(searchParams.get('limit')) || 6;
+    const page = parseInt(searchParams.get("page")) || 1;
+    const limit = parseInt(searchParams.get("limit")) || 6;
     const skip = (page - 1) * limit;
+
+    // const cacheKey = `blogs:page=${page}:limit=${limit}`;
+
+    // let cached;
+    // try {
+    //   cached = await redis.get(cacheKey);
+    // } catch (err) {
+    //   console.log("Redis GET failed", err.message);
+    // }
+
+    // console.log("cached data", !!cached);
+
+    // if (cached) {
+    //   return NextResponse.json(cached, { status: 200 });  
+    // }
 
     const [blogs, total] = await Promise.all([
       prisma.blog.findMany({
         skip,
         take: limit,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         include: {
           author: {
             select: {
@@ -27,16 +42,21 @@ export async function GET(req) {
     ]);
 
     const totalPages = Math.ceil(total / limit);
-
     const response = {
       blogs,
       pagination: { total, totalPages, currentPage: page },
     };
 
+    // try {
+    //   await redis.set(cacheKey, response, { ex: 60 * 60 });
+    // } catch (err) {
+    //   console.log("Redis SET failed", err.message);
+    // }
+
     return NextResponse.json(response, { status: 200 });
 
   } catch (error) {
     console.error("get blogs error", error?.message);
-    return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
 }

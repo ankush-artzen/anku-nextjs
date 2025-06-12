@@ -1,15 +1,11 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { signupSchema } from "@/lib/validations/authSchema";
 import { createToken } from "@/lib/jwt";
 import { cookies } from "next/headers";
 
 export async function POST(req) {
   try {
     const body = await req.json();
-
-    // ✅ Validate with Yup
-    await signupSchema.validate(body, { abortEarly: false });
 
     const { username, email, password } = body;
 
@@ -27,6 +23,7 @@ export async function POST(req) {
         { status: 409 }
       );
     }
+
     // ✅ Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -38,7 +35,7 @@ export async function POST(req) {
         password: hashedPassword,
       },
     });
-    console.log("userrr", user);
+
     // ✅ Create JWT token
     const token = createToken(user);
 
@@ -67,17 +64,6 @@ export async function POST(req) {
       { status: 201 }
     );
   } catch (error) {
-    if (error.name === "ValidationError") {
-      return Response.json(
-        {
-          success: false,
-          message: "Validation failed",
-          errors: error.errors,
-        },
-        { status: 400 }
-      );
-    }
-
     console.error("Signup Error:", error);
     return Response.json(
       {
