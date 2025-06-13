@@ -9,10 +9,14 @@ import { toast, ToastContainer } from 'react-toastify';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import { blogValidationSchema } from '@/lib/validations/updateSchema';
 import 'react-toastify/dist/ReactToastify.css';
+import { useDispatch } from "react-redux";
+import { clearAllBlogs } from "@/redux/slices/blogSlice";
+import { clearPublicBlogs } from "@/redux/slices/publicSlice";
 
 export default function EditBlog() {
   const { id } = useParams();
   const router = useRouter();
+  const dispatch = useDispatch();
 
   const [initialValues, setInitialValues] = useState({
     title: '',
@@ -76,7 +80,8 @@ export default function EditBlog() {
       if (!response.ok) {
         throw new Error('Failed to update blog');
       }
-
+      dispatch(clearAllBlogs());
+      dispatch(clearPublicBlogs());
       toast.success('Blog updated!');
       setTimeout(() => router.push(`/blogs/${id}`), 1500);
     } catch (err) {

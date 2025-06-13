@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import FingerprintJS from '@fingerprintjs/fingerprintjs';
 import {
   Card,
   CardContent,
@@ -11,6 +12,8 @@ import {
 import Link from "next/link";
 import ReactPaginate from "react-paginate";
 import usePaginatedPublicBlogs from "@/lib/hooks/usePaginatedPublicBlogs";
+import { useEffect } from "react";
+import { setCookie, getCookie } from 'cookies-next'; // or your preferred cookie library
 
 export default function HomePage() {
   const { blogs, page, totalPages, loading, error, setPage } =
@@ -20,6 +23,39 @@ export default function HomePage() {
     setPage(selected + 1);
   };
 
+  useEffect(() => {
+    const setVisitorId = async () => {
+      // Check if cookie already exists
+      const existingVisitorId = getCookie('visitorId');
+      if (existingVisitorId) {
+        console.log("Visitor ID already exists:", existingVisitorId);
+        return; // already set
+      }
+
+      try {
+        // Load FingerprintJS
+        const fp = await FingerprintJS.load();
+        const result = await fp.get();
+
+        // Get visitorId
+        const visitorId = result.visitorId;
+
+        // Set cookie (valid for 1 year)
+        setCookie('visitorId', visitorId, { 
+          maxAge: 60 * 60 * 24 * 365, // 1 year in seconds
+          path: '/',
+          sameSite: 'lax',
+          secure: process.env.NODE_ENV === 'production'
+        });
+
+        console.log("Visitor ID set:", visitorId);
+      } catch (err) {
+        console.error("Failed to set visitor ID:", err);
+      }
+    };
+
+    setVisitorId();
+  }, []);
   if (loading) {
     return (
       <main className="max-w-5xl mx-auto p-8 space-y-16 flex justify-center items-center min-h-[400px]">

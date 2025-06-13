@@ -3,13 +3,31 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '@/lib/prisma';
 import { supabase } from '@/lib/supabase/supabaseClient';
 import { blogSchema } from '@/lib/validations/blogSchema';
+import { getCookie } from 'cookies-next';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
-// ✅ GET a single blog
+// Simple visitor tracking middleware
+async function trackVisitor(req) {
+  try {
+    const visitorId = getCookie('visitorId', { req });
+    if (visitorId) {
+      console.log('Visitor ID:', visitorId);
+      // Here you could store the visitor ID in your database if needed
+    }
+    return visitorId;
+  } catch (err) {
+    console.error('Visitor tracking error:', err);
+    return null;
+  }
+}
+
 export async function GET(req, { params }) {
   try {
-    const { id } = await params  // ✅ this is correct
+    // Track visitor
+    await trackVisitor(req);
+
+    const { id } = params;  
     const blog = await prisma.blog.findUnique({ where: { id } });
 
     if (!blog) {
@@ -26,11 +44,13 @@ export async function GET(req, { params }) {
   }
 }
 
-
 export async function PATCH(req, context) {
   try {
-    const { params } = await context;
-    const blogId = await params.id;
+    // Track visitor
+    await trackVisitor(req);
+
+    const { params } = context;
+    const blogId = params.id;
 
     const token = req.headers.get('authorization')?.split(' ')[1];
     if (!token) return NextResponse.json({ message: 'Unauthorized: No token' }, { status: 401 });
@@ -85,28 +105,23 @@ export async function PATCH(req, context) {
 }
 
 export async function DELETE(req, context) {
-  const { params } = await context;
-  const id = params?.id;
-
-  if (!id) {
-    return NextResponse.json({ message: 'Blog ID not provided' }, { status: 400 });
-  }
-
-  const authHeader = req.headers.get('authorization');
-  const token = authHeader?.split(' ')[1];
-
-  if (!token) {
-    return NextResponse.json({ message: 'Unauthorized: No token provided' }, { status: 401 });
-  }
-
-  let payload;
   try {
-    payload = jwt.verify(token, JWT_SECRET);
-  } catch {
-    return NextResponse.json({ message: 'Unauthorized: Invalid token' }, { status: 401 });
-  }
+    // Track visitor
+    await trackVisitor(req);
 
-  try {
+    const { params } = context;
+    const id = params?.id;
+
+    if (!id) {
+      return NextResponse.json({ message: 'Blog ID not provided' }, { status: 400 });
+    }
+
+    const token = req.headers.get('authorization')?.split(' ')[1];
+    if (!token) {
+      return NextResponse.json({ message: 'Unauthorized: No token provided' }, { status: 401 });
+    }
+
+    const payload = jwt.verify(token, JWT_SECRET);
     const blog = await prisma.blog.findUnique({ where: { id } });
 
     if (!blog) {
@@ -118,7 +133,6 @@ export async function DELETE(req, context) {
     }
 
     await prisma.blog.delete({ where: { id } });
-
     return NextResponse.json({ message: 'Blog deleted successfully' }, { status: 200 });
 
   } catch (err) {

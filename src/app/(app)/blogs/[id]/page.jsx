@@ -5,9 +5,10 @@ import { useParams, useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { jwtDecode } from "jwt-decode";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { clearAllBlogs } from "@/redux/slices/blogSlice";
 import { clearPublicBlogs } from "@/redux/slices/publicSlice";
+
 
 export default function BlogDetailPage() {
   const { id } = useParams();
@@ -69,16 +70,16 @@ export default function BlogDetailPage() {
           Authorization: `Bearer ${token}`,
         },
       });
+      dispatch(clearAllBlogs());
+      dispatch(clearPublicBlogs());
+    
 
       const data = await res.json();
 
       if (!res.ok) {
         throw new Error(data.message || "Failed to delete blog");
       }
-
-      // Clear all cached blogs in Redux
-      dispatch(clearAllBlogs());
-      dispatch(clearPublicBlogs());
+    
 
       toast.success("Blog deleted successfully");
       router.push("/blogs/dashboard");

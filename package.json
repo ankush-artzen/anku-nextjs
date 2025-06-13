@@ -12,6 +12,7 @@
     "prisma:generate": "npx prisma generate --schema=src/prisma/schema.prisma"
   },
   "dependencies": {
+    "@fingerprintjs/fingerprintjs": "^4.6.2",
     "@hookform/resolvers": "^5.1.0",
     "@prisma/client": "^6.8.2",
     "@radix-ui/react-alert-dialog": "^1.1.14",
